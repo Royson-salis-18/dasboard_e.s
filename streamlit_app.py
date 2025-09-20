@@ -258,7 +258,7 @@ def main():
 
     # Main dashboard tabs
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["🎯 Real-time Gauges", " Time Series Analysis", " Parameter Correlations", "⚖ Tub Comparisons"]
+        [" Real-time Gauges", " Time Series Analysis", " Parameter Correlations", " Tub Comparisons"]
     )
 
     with tab1:
