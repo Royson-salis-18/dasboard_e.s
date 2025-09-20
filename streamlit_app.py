@@ -11,7 +11,7 @@ from io import StringIO
 # Page configuration
 st.set_page_config(
     page_title="Soil Monitoring Dashboard",
-    page_icon="🌱",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -164,19 +164,19 @@ def create_gauge(value, parameter, optimal_range):
 def get_status_message(value, parameter, optimal_range):
     """Get status message for a parameter"""
     if pd.isna(value):
-        return "❓", "No data", "secondary"
+        return "", "No data", "secondary"
 
     if optimal_range['min'] <= value <= optimal_range['max']:
-        return "✅", f"Optimal: {value:.2f} {optimal_range['unit']}", "success"
+        return "", f"Optimal: {value:.2f} {optimal_range['unit']}", "success"
     elif optimal_range['critical_low'] <= value <= optimal_range['critical_high']:
-        return "⚠️", f"Acceptable: {value:.2f} {optimal_range['unit']}", "warning"
+        return "", f"Acceptable: {value:.2f} {optimal_range['unit']}", "warning"
     else:
-        return "🚨", f"Critical: {value:.2f} {optimal_range['unit']}", "error"
+        return "", f"Critical: {value:.2f} {optimal_range['unit']}", "error"
 
 
 def main():
     # Title and description
-    st.title("🌱 Soil Monitoring Dashboard")
+    st.title(" Soil Monitoring Dashboard")
     st.markdown("Real-time soil parameter monitoring and analysis system")
     st.markdown("---")
 
@@ -185,14 +185,14 @@ def main():
         df = load_data()
 
     if df.empty:
-        st.error("❌ No data available. Please check your Google Sheets connection and ensure the sheet is accessible.")
+        st.error(" No data available. Please check your Google Sheets connection and ensure the sheet is accessible.")
         st.stop()
 
     # Display data info
-    st.success(f"✅ Successfully loaded {len(df)} records from Google Sheets")
+    st.success(f" Successfully loaded {len(df)} records from Google Sheets")
 
     # Show data preview for debugging
-    with st.expander("🔍 Data Preview (for debugging)", expanded=False):
+    with st.expander(" Data Preview (for debugging)", expanded=False):
         st.write("First few rows of loaded data:")
         st.dataframe(df.head())
         st.write("Data types:")
@@ -201,7 +201,7 @@ def main():
         st.write(df['Tub (count)'].unique())
 
     # Sidebar controls
-    st.sidebar.header("🎛️ Dashboard Controls")
+    st.sidebar.header("🎛 Dashboard Controls")
 
     # Tub selection
     available_tubs = sorted([int(x) for x in df['Tub (count)'].dropna().unique() if pd.notna(x)])
@@ -229,7 +229,7 @@ def main():
     )
 
     # Time filtering
-    st.sidebar.subheader("📅 Time Filtering")
+    st.sidebar.subheader(" Time Filtering")
     if not df['Date'].dropna().empty:
         min_date = df['Date'].min().date()
         max_date = df['Date'].max().date()
@@ -258,11 +258,11 @@ def main():
 
     # Main dashboard tabs
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["🎯 Real-time Gauges", "📊 Time Series Analysis", "🔗 Parameter Correlations", "⚖️ Tub Comparisons"]
+        ["🎯 Real-time Gauges", " Time Series Analysis", " Parameter Correlations", "⚖ Tub Comparisons"]
     )
 
     with tab1:
-        st.header("🎯 Real-time Parameter Monitoring")
+        st.header(" Real-time Parameter Monitoring")
 
         if not filtered_df.empty and selected_parameters:
             # Get latest readings for each tub
@@ -276,7 +276,7 @@ def main():
                 tub_data = latest_data.loc[tub]
                 last_updated = tub_data['DateTime']
 
-                st.subheader(f"🧪 Tub {tub} - Current Status")
+                st.subheader(f" Tub {tub} - Current Status")
                 st.caption(
                     f"Last updated: {last_updated.strftime('%Y-%m-%d %H:%M:%S') if pd.notna(last_updated) else 'Unknown'}")
 
@@ -333,7 +333,7 @@ def main():
             st.info("Please select parameters and tubs to display gauges.")
 
     with tab2:
-        st.header("📊 Time Series Analysis")
+        st.header("Time Series Analysis")
 
         if selected_parameters and not filtered_df.empty:
             # Create subplot for each parameter
@@ -388,7 +388,7 @@ def main():
             st.info("Please select at least one parameter to display.")
 
     with tab3:
-        st.header("🔗 Parameter Correlations")
+        st.header("Parameter Correlations")
 
         if len(selected_parameters) >= 2 and not filtered_df.empty:
             # Correlation matrix
@@ -423,7 +423,7 @@ def main():
             st.info("Please select at least 2 parameters for correlation analysis.")
 
     with tab4:
-        st.header("⚖️ Tub Comparisons")
+        st.header("Tub Comparisons")
 
         if selected_parameters and len(selected_tubs) >= 2 and not filtered_df.empty:
             # Box plots for parameter comparison across tubs
@@ -456,7 +456,7 @@ def main():
 
     # Sidebar summary statistics
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📈 Summary Statistics")
+    st.sidebar.subheader("Summary Statistics")
 
     if not filtered_df.empty:
         for param in selected_parameters[:3]:
@@ -471,11 +471,11 @@ def main():
 
     # Data management
     st.sidebar.markdown("---")
-    st.sidebar.subheader("🔄 Data Management")
+    st.sidebar.subheader("Data Management")
 
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        if st.button("🔄 Refresh", use_container_width=True):
+        if st.button("Refresh", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
@@ -483,7 +483,7 @@ def main():
         if not filtered_df.empty:
             csv = filtered_df.to_csv(index=False)
             st.download_button(
-                label="📥 Export",
+                label="Export",
                 data=csv,
                 file_name=f"soil_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv",
@@ -493,7 +493,7 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown(
-        "🌱 **Soil Monitoring Dashboard** | "
+        "**Soil Monitoring Dashboard** | "
         f"Data Source: Google Sheets | "
         f"Last Refresh: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
