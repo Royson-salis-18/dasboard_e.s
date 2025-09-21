@@ -25,8 +25,8 @@ GOOGLE_SHEET_URL = f"https://docs.google.com/spreadsheets/d/{GOOGLE_SHEET_ID}/ex
 OPTIMAL_RANGES = {
     'Ph (pH)': {'min': 6.0, 'max': 7.0, 'unit': 'pH', 'critical_low': 5.5, 'critical_high': 7.5},
     'Moisture (%)': {'min': 40, 'max': 70, 'unit': '%', 'critical_low': 30, 'critical_high': 80},
-    'Temperature (K)': {'min': 288, 'max': 298, 'unit': 'K', 'critical_low': 283, 'critical_high': 308},
-    # 15-25°C converted to Kelvin
+    'Temperature (°C)': {'min': 15, 'max': 25, 'unit': '°C', 'critical_low': 10, 'critical_high': 35},
+
     'N (mg/kg)': {'min': 20, 'max': 50, 'unit': 'mg/kg', 'critical_low': 10, 'critical_high': 80},
     'P (mg/kg)': {'min': 15, 'max': 30, 'unit': 'mg/kg', 'critical_low': 5, 'critical_high': 50},
     'K (mg/kg)': {'min': 120, 'max': 280, 'unit': 'mg/kg', 'critical_low': 80, 'critical_high': 400},
@@ -75,7 +75,7 @@ def load_data():
         df = df.dropna(subset=['Date'])
 
         # Ensure numeric columns are properly typed
-        numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (K)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
+        numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
                            'EC (mS/cm)', 'Tub (count)']
         for col in numeric_columns:
             if col in df.columns:
@@ -88,7 +88,6 @@ def load_data():
         print(f"Data loaded successfully. Shape: {df.shape}")
         print(f"Tub column unique values: {df['Tub (count)'].unique()}")
         print(f"Tub column data type: {df['Tub (count)'].dtype}")
-
         return df
 
     except requests.exceptions.Timeout:
@@ -217,7 +216,7 @@ def main():
     st.sidebar.write(f"Selected tubs: {selected_tubs}")
 
     # Parameter selection
-    numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (K)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
+    numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
                        'EC (mS/cm)']
     available_parameters = [col for col in numeric_columns if col in df.columns]
 
