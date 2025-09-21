@@ -333,59 +333,288 @@ def main():
             st.info("Please select parameters and tubs to display gauges.")
 
     with tab2:
-        st.header("Time Series Analysis")
+        st.header("📈 Time Series Analysis")
 
         if selected_parameters and not filtered_df.empty:
-            # Create subplot for each parameter
-            fig = make_subplots(
-                rows=len(selected_parameters), cols=1,
-                subplot_titles=selected_parameters,
-                vertical_spacing=0.08
+            # Option to view parameters individually or together
+            view_mode = st.radio(
+                "View Mode:",
+                ["Individual Charts", "Combined View"],
+                horizontal=True,
+                help="Individual charts show each parameter separately with optimized scales. Combined view shows all parameters on separate subplots."
             )
 
-            colors = px.colors.qualitative.Set3
+            if view_mode == "Individual Charts":
+                # Create individual charts for each parameter with proper scaling
+                for param in selected_parameters:
+                    st.subheader(f"📊 {param}")
 
-            for i, param in enumerate(selected_parameters):
-                for j, tub in enumerate(selected_tubs):
-                    tub_data = filtered_df[filtered_df['Tub (count)'] == tub]
-                    if not tub_data.empty:
-                        fig.add_trace(
-                            go.Scatter(
-                                x=tub_data['DateTime'],
-                                y=tub_data[param],
-                                mode='lines+markers',
-                                name=f'Tub {tub}' if i == 0 else f'Tub {tub}',
-                                line=dict(color=colors[j % len(colors)], width=2),
-                                marker=dict(size=4),
-                                showlegend=(i == 0)
-                            ),
+                    # Create figure for this parameter
+                    fig = go.Figure()
+
+                    # Add data for each tub
+                    colors = px.colors.qualitative.Set3
+                    for j, tub in enumerate(selected_tubs):
+                        tub_data = filtered_df[filtered_df['Tub (count)'] == tub].sort_values('DateTime')
+                        if not tub_data.empty and param in tub_data.columns:
+                            valid_data = tub_data.dropna(subset=[param])
+                            if not valid_data.empty:
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=valid_data['DateTime'],
+                                        y=valid_data[param],
+                                        mode='lines+markers',
+                                        name=f'Tub {tub}',
+                                        line=dict(color=colors[j % len(colors)], width=3),
+                                        marker=dict(size=6, symbol='circle'),
+                                        hovertemplate=f'<b>Tub {tub}</b><br>' +
+                                                      'Date: %{x}<br>' +
+                                                      f'{param}: %{{y:.2f}}<br>' +
+                                                      '<extra></extra>'
+                                    )
+                                )
+
+                    # Add optimal range bands if available
+                    if param in OPTIMAL_RANGES:
+                        opt_range = OPTIMAL_RANGES[param]
+
+                        # Critical range (light red)
+                        fig.add_hrect(
+                            y0=opt_range['critical_low'],
+                            y1=opt_range['critical_high'],
+                            fillcolor="rgba(255, 100, 100, 0.15)",
+                            line_width=0,
+                            layer="below"
+                        )
+
+                        # Optimal range (light green)
+                        fig.add_hrect(
+                            y0=opt_range['min'],
+                            y1=opt_range['max'],
+                            fillcolor="rgba(100, 255, 100, 0.25)",
+                            line_width=0,
+                            layer="below"
+                        )
+
+                        # Add range boundary lines
+                        fig.add_hline(
+                            y=opt_range['min'],
+                            line_dash="dash",
+                            line_color="#00ff00",
+                            annotation_text="Optimal Min",
+                            annotation_position="right",
+                            annotation=dict(font=dict(color='white'))
+                        )
+                        fig.add_hline(
+                            y=opt_range['max'],
+                            line_dash="dash",
+                            line_color="#00ff00",
+                            annotation_text="Optimal Max",
+                            annotation_position="right",
+                            annotation=dict(font=dict(color='white'))
+                        )
+
+                        # Set y-axis range with some padding
+                        param_data = filtered_df[filtered_df['Tub (count)'].isin(selected_tubs)][param].dropna()
+                        if not param_data.empty:
+                            data_min = param_data.min()
+                            data_max = param_data.max()
+
+                            # Extend range to include optimal ranges
+                            y_min = min(data_min, opt_range['critical_low']) * 0.95
+                            y_max = max(data_max, opt_range['critical_high']) * 1.05
+
+                            fig.update_yaxes(range=[y_min, y_max])
+
+                    # Update layout for better visibility
+                    fig.update_layout(
+                        height=500,  # Increased height
+                        title=dict(
+                            text=f"{param} Over Time",
+                            x=0.5,
+                            font=dict(size=18, color='white')
+                        ),
+                        xaxis=dict(
+                            title=dict(text="Date and Time", font=dict(size=14, color='white')),
+                            tickfont=dict(size=12, color='white'),
+                            showgrid=True,
+                            gridcolor='#404040',
+                            gridwidth=1
+                        ),
+                        yaxis=dict(
+                            title=dict(text=f"{param}", font=dict(size=14, color='white')),
+                            tickfont=dict(size=12, color='white'),
+                            showgrid=True,
+                            gridcolor='#404040',
+                            gridwidth=1,
+                            zeroline=True,
+                            zerolinecolor='#666666',
+                            zerolinewidth=1
+                        ),
+                        legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1,
+                            font=dict(size=12, color='white')
+                        ),
+                        hovermode='x unified',
+                        plot_bgcolor='#1e1e1e',
+                        paper_bgcolor='#2d2d2d'
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    # Add parameter statistics
+                    with st.expander(f"📈 {param} Statistics"):
+                        param_stats = filtered_df[filtered_df['Tub (count)'].isin(selected_tubs)][param].describe()
+                        col1, col2, col3, col4 = st.columns(4)
+
+                        with col1:
+                            st.metric("Mean", f"{param_stats['mean']:.2f}")
+                        with col2:
+                            st.metric("Std Dev", f"{param_stats['std']:.2f}")
+                        with col3:
+                            st.metric("Min", f"{param_stats['min']:.2f}")
+                        with col4:
+                            st.metric("Max", f"{param_stats['max']:.2f}")
+
+                    st.markdown("---")
+
+            else:  # Combined View
+                # Create subplot for each parameter
+                fig = make_subplots(
+                    rows=len(selected_parameters), cols=1,
+                    subplot_titles=[f"{param}" for param in selected_parameters],
+                    vertical_spacing=0.08,
+                    shared_xaxes=True
+                )
+
+                colors = px.colors.qualitative.Set3
+
+                for i, param in enumerate(selected_parameters):
+                    for j, tub in enumerate(selected_tubs):
+                        tub_data = filtered_df[filtered_df['Tub (count)'] == tub].sort_values('DateTime')
+                        if not tub_data.empty and param in tub_data.columns:
+                            valid_data = tub_data.dropna(subset=[param])
+                            if not valid_data.empty:
+                                fig.add_trace(
+                                    go.Scatter(
+                                        x=valid_data['DateTime'],
+                                        y=valid_data[param],
+                                        mode='lines+markers',
+                                        name=f'Tub {tub}' if i == 0 else f'Tub {tub}',
+                                        line=dict(color=colors[j % len(colors)], width=2),
+                                        marker=dict(size=4),
+                                        showlegend=(i == 0),
+                                        legendgroup=f'tub_{tub}',
+                                        hovertemplate=f'<b>Tub {tub}</b><br>' +
+                                                      'Date: %{x}<br>' +
+                                                      f'{param}: %{{y:.2f}}<br>' +
+                                                      '<extra></extra>'
+                                    ),
+                                    row=i + 1, col=1
+                                )
+
+                    # Add optimal range if available
+                    if param in OPTIMAL_RANGES:
+                        opt_range = OPTIMAL_RANGES[param]
+
+                        fig.add_hrect(
+                            y0=opt_range['min'], y1=opt_range['max'],
+                            fillcolor="rgba(0, 255, 0, 0.15)",
+                            line_width=0,
+                            row=i + 1, col=1
+                        )
+                        fig.add_hrect(
+                            y0=opt_range['critical_low'], y1=opt_range['critical_high'],
+                            fillcolor="rgba(255, 255, 0, 0.08)",
+                            line_width=0,
                             row=i + 1, col=1
                         )
 
-                # Add optimal range if available
-                if param in OPTIMAL_RANGES:
-                    opt_range = OPTIMAL_RANGES[param]
-                    fig.add_hrect(
-                        y0=opt_range['min'], y1=opt_range['max'],
-                        fillcolor="green", opacity=0.1,
-                        line_width=0,
-                        row=i + 1, col=1
-                    )
-                    fig.add_hrect(
-                        y0=opt_range['critical_low'], y1=opt_range['critical_high'],
-                        fillcolor="yellow", opacity=0.05,
-                        line_width=0,
+                        # Set appropriate y-axis range for each subplot
+                        param_data = filtered_df[filtered_df['Tub (count)'].isin(selected_tubs)][param].dropna()
+                        if not param_data.empty:
+                            data_min = param_data.min()
+                            data_max = param_data.max()
+
+                            y_min = min(data_min, opt_range['critical_low']) * 0.95
+                            y_max = max(data_max, opt_range['critical_high']) * 1.05
+
+                            fig.update_yaxes(range=[y_min, y_max], row=i + 1, col=1)
+
+                # Update layout for combined view
+                fig.update_layout(
+                    height=400 * len(selected_parameters),  # Increased height per parameter
+                    title=dict(
+                        text="Parameter Trends Over Time - Combined View",
+                        x=0.5,
+                        font=dict(size=20, color='white')
+                    ),
+                    showlegend=True,
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="center",
+                        x=0.5,
+                        font=dict(color='white')
+                    ),
+                    plot_bgcolor='#1e1e1e',
+                    paper_bgcolor='#2d2d2d'
+                )
+
+                # Update all y-axes
+                for i in range(len(selected_parameters)):
+                    fig.update_yaxes(
+                        title=dict(text=f"{selected_parameters[i]}", font=dict(color='white')),
+                        tickfont=dict(color='white'),
+                        showgrid=True,
+                        gridcolor='#404040',
+                        gridwidth=1,
                         row=i + 1, col=1
                     )
 
-            fig.update_layout(
-                height=300 * len(selected_parameters),
-                title_text="Parameter Trends Over Time",
-                showlegend=True
-            )
-            st.plotly_chart(fig, use_container_width=True)
+                # Update x-axis only for the bottom subplot
+                fig.update_xaxes(
+                    title=dict(text="Date and Time", font=dict(color='white')),
+                    tickfont=dict(color='white'),
+                    showgrid=True,
+                    gridcolor='#404040',
+                    gridwidth=1,
+                    row=len(selected_parameters), col=1
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Please select at least one parameter to display.")
+
+        # Time series controls
+        if not filtered_df.empty:
+            st.subheader("🎛️ Time Series Controls")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                # Resampling option
+                resample_freq = st.selectbox(
+                    "Data Resampling",
+                    options=["Original", "Hourly", "Daily", "Weekly"],
+                    help="Resample data to different frequencies for trend analysis"
+                )
+
+            with col2:
+                # Moving average option
+                ma_window = st.slider(
+                    "Moving Average Window",
+                    min_value=1,
+                    max_value=20,
+                    value=1,
+                    help="Apply moving average smoothing (1 = no smoothing)"
+                )
+
 
     with tab3:
         st.header("Parameter Correlations")
