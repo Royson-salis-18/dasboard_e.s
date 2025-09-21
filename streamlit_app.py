@@ -26,14 +26,12 @@ OPTIMAL_RANGES = {
     'Ph (pH)': {'min': 6.0, 'max': 7.0, 'unit': 'pH', 'critical_low': 5.5, 'critical_high': 7.5},
     'Moisture (%)': {'min': 40, 'max': 70, 'unit': '%', 'critical_low': 30, 'critical_high': 80},
     'Temperature (°C)': {'min': 15, 'max': 25, 'unit': '°C', 'critical_low': 10, 'critical_high': 35},
-
-    'N (mg/kg)': {'min': 20, 'max': 50, 'unit': 'mg/kg', 'critical_low': 10, 'critical_high': 80},
-    'P (mg/kg)': {'min': 15, 'max': 30, 'unit': 'mg/kg', 'critical_low': 5, 'critical_high': 50},
-    'K (mg/kg)': {'min': 120, 'max': 280, 'unit': 'mg/kg', 'critical_low': 80, 'critical_high': 400},
-    # Typical soil K levels
-    'EC (mS/cm)': {'min': 0.8, 'max': 2.5, 'unit': 'mS/cm', 'critical_low': 0.1, 'critical_high': 4.0}
-    # Electrical conductivity for good plant growth
+    'N (kg/ha)': {'min': 120, 'max': 200, 'unit': 'kg/ha', 'critical_low': 80, 'critical_high': 300},  # Updated unit and values
+    'P (kg/ha)': {'min': 25, 'max': 50, 'unit': 'kg/ha', 'critical_low': 15, 'critical_high': 80},   # Updated unit and values
+    'K (kg/ha)': {'min': 150, 'max': 300, 'unit': 'kg/ha', 'critical_low': 100, 'critical_high': 450}, # Updated unit and values
+    'EC (dS/m)': {'min': 0.8, 'max': 2.5, 'unit': 'dS/m', 'critical_low': 0.1, 'critical_high': 4.0}  # Updated unit
 }
+
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -75,8 +73,8 @@ def load_data():
         df = df.dropna(subset=['Date'])
 
         # Ensure numeric columns are properly typed
-        numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
-                           'EC (mS/cm)', 'Tub (count)']
+        numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (kg/ha)', 'P (kg/ha)', 'K (kg/ha)',
+                           'EC (dS/m)', 'Tub (count)']
         for col in numeric_columns:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
