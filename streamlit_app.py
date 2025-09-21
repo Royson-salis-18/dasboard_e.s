@@ -214,8 +214,8 @@ def main():
     st.sidebar.write(f"Selected tubs: {selected_tubs}")
 
     # Parameter selection
-    numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (mg/kg)', 'P (mg/kg)', 'K (mg/kg)',
-                       'EC (mS/cm)']
+    numeric_columns = ['Ph (pH)', 'Moisture (%)', 'Temperature (°C)', 'N (kg/ha)', 'P (kg/ha)', 'K (kg/ha)',
+                       'EC (dS/m)']
     available_parameters = [col for col in numeric_columns if col in df.columns]
 
     selected_parameters = st.sidebar.multiselect(
