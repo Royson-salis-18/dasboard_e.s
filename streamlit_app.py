@@ -330,7 +330,7 @@ def main():
             st.info("Please select parameters and tubs to display gauges.")
 
     with tab2:
-        st.header("📈 Time Series Analysis")
+        st.header(" Time Series Analysis")
 
         if selected_parameters and not filtered_df.empty:
             # Option to view parameters individually or together
@@ -344,7 +344,7 @@ def main():
             if view_mode == "Individual Charts":
                 # Create individual charts for each parameter with proper scaling
                 for param in selected_parameters:
-                    st.subheader(f"📊 {param}")
+                    st.subheader(f" {param}")
 
                     # Create figure for this parameter
                     fig = go.Figure()
@@ -464,7 +464,7 @@ def main():
                     st.plotly_chart(fig, use_container_width=True)
 
                     # Add parameter statistics
-                    with st.expander(f"📈 {param} Statistics"):
+                    with st.expander(f" {param} Statistics"):
                         param_stats = filtered_df[filtered_df['Tub (count)'].isin(selected_tubs)][param].describe()
                         col1, col2, col3, col4 = st.columns(4)
 
@@ -590,7 +590,7 @@ def main():
 
         # Time series controls
         if not filtered_df.empty:
-            st.subheader("🎛️ Time Series Controls")
+            st.subheader("🎛 Time Series Controls")
 
             col1, col2 = st.columns(2)
 
